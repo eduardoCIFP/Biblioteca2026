@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
@@ -31,10 +32,12 @@ public class Biblioteca2026 {
     private static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
-
-        cargaDatos();
-        menu(); 
-        //MODIFICACION ELIMINADA
+        cargaDatosExam();
+        //listadosConStreams();
+        
+        ordenarConStreams();
+        //menu(); 
+        
     }
 
     //<editor-fold defaultstate="collapsed" desc="PRUEBA OBJETIVA 12-12-2025">
@@ -146,17 +149,89 @@ public class Biblioteca2026 {
         }
     }
 //</editor-fold>
-    //MÉTODO PARA MOSTRAR Y CONTABILIZAR LOS PRESTAMOS DE UN LIBRO
-   
-
+       
+    public static void listadosConStreams(){
+        //Listados generales de libros y usuarios con STREAMS
+        System.out.println("Libros listados desde un STREAM:");
+        libros.stream().forEach(l->System.out.println(l));
+        System.out.println("\nUsuarios listados desde un STREAM:");
+        usuarios.stream().forEach(u->System.out.println(u));
+        
+        //Listados selectivos (filter) con STREAMS
+        System.out.println("\nLibros de la seccion aventuras:");
+        libros.stream().filter(l-> l.getGenero().equalsIgnoreCase("aventuras"))
+                       .forEach(l->System.out.println(l));
+        
+        System.out.println("\nLibros de la seccion novela negra o del autor JRR tolkien:");
+        libros.stream().filter(l-> l.getGenero().equalsIgnoreCase("novela negra")
+                       || l.getAutor().equalsIgnoreCase("jrr tolkien"))
+                       .forEach(l->System.out.println(l));
+        
+        System.out.println("\nPrestamos fuera de plazo:");
+        prestamos.stream().filter(p-> p.getFechaDev().isBefore(LocalDate.now()))
+                       .forEach(p->System.out.println(p));
+        
+        System.out.println("\nPrestamos activos y no activos del usuario(teclear NOMBRE):");
+        String nombre=sc.next();
+        prestamos.stream().filter(p->p.getUsuarioPrest().getNombre().equalsIgnoreCase(nombre))
+                .forEach(p->System.out.println(p));
+        prestamosHist.stream().filter(p->p.getUsuarioPrest().getNombre().equalsIgnoreCase(nombre))
+                .forEach(p->System.out.println(p));
+        
+        System.out.println("\nPrestamos Fuera de plazo de un usuario(teclear NOMBRE):");
+        String nombre2=sc.next();
+        prestamos.stream().filter(p->p.getUsuarioPrest().getNombre().equalsIgnoreCase(nombre2)
+                        && p.getFechaDev().isBefore(LocalDate.now()))
+                        .forEach(p->System.out.println(p));
+        
+        System.out.println("\nPrestamos activos de libros del genero aventuras:");
+        prestamos.stream().filter(p->p.getLibroPrest().getGenero().equalsIgnoreCase("aventuras"))
+                .forEach(p->System.out.println(p));
+    }  
+    
+    public static void ordenarConStreams(){
+        System.out.println("\nListado de libros ordenados alfabeticamente por título:");
+        libros.stream().sorted(Comparator.comparing(Libro::getTitulo)).forEach(l->System.out.println(l));
+     
+        System.out.println("\nListado de libros ordenados por ejemplares de + a -:");
+        libros.stream().sorted(Comparator.comparing(Libro::getEjemplares).reversed()).forEach(l->System.out.println(l));
+    
+        
+        System.out.println("\nListado de Prestamos ordenados por Fecha prestamo:");
+        prestamos.stream().sorted(Comparator.comparing(Prestamo::getFechaPrest)).forEach(p->System.out.println(p));
+        
+        System.out.println("\nListado de libros ordenados por número de prestamos:");
+        libros.stream().sorted(Comparator.comparing(l->numPrestamosLibro((Libro) l)).reversed())
+                .forEach(l->System.out.println(l + " Unidades prestadas: " + numPrestamosLibro(l)));
+    
+        
+    }
+    
+    public static int numPrestamosLibro(Libro l){
+        int cont=0;
+        for (Prestamo p : prestamos) {
+            if (p.getLibroPrest().equals(l)){
+                cont++;
+            }
+        }
+        for (Prestamo p : prestamosHist) {
+            if (p.getLibroPrest().equals(l)){
+                cont++;
+            }
+        }
+        return cont;
+    }
+    
+    
+    
     public static void cargaDatosExam() {
         libros.add(new Libro("1-11", "El Hobbit", "JRR Tolkien", "Aventuras", 3));
         libros.add(new Libro("1-22", "El Silmarillon", "JRR Tolkien", "Aventuras", 3));
         libros.add(new Libro("1-33", "El Medico", "N. Gordon", "Aventuras", 4));
         libros.add(new Libro("1-44", "Chaman", "N. Gordon", "Aventuras", 3));
         libros.add(new Libro("1-55", "Momo", "M. Ende", "Aventuras", 2));
-        libros.add(new Libro("1-66", "Paraiso inhabitado", "A.M.Matute", "Aventuras", 2));
-        libros.add(new Libro("1-77", "Olvidado Rey Gudu", "A.M.Matute", "Aventuras", 0));
+        libros.add(new Libro("1-66", "Paraiso inhabitado", "A.M.Matute", "Novela", 2));
+        libros.add(new Libro("1-77", "Olvidado Rey Gudu", "A.M.Matute", "Novela", 0));
         libros.add(new Libro("1-88", "El ultimo barco", "D.Villar", "Novela Negra", 3));
         libros.add(new Libro("1-99", "Ojos de agua", "D.Villar", "Novela Negra", 0));
 
@@ -353,6 +428,7 @@ public class Biblioteca2026 {
     }
 
 //</editor-fold>
+    
     //<editor-fold defaultstate="collapsed" desc="GESTION LIBROS">
     private static void nuevoLibro() {
         Scanner sc = new Scanner(System.in);
@@ -395,6 +471,7 @@ public class Biblioteca2026 {
     }
 
 //</editor-fold>
+    
     //<editor-fold defaultstate="collapsed" desc="GESTION USUARIOS">
     private static void nuevoUsuario() {
     }
@@ -550,6 +627,7 @@ public class Biblioteca2026 {
     }
 
 //</editor-fold>
+    
     //<editor-fold defaultstate="collapsed" desc="LISTADOS">
     private static void libroMasLeido() {
         ArrayList<Integer> contadoresLibros = new ArrayList();
@@ -654,10 +732,9 @@ public class Biblioteca2026 {
 
     }
 //</editor-fold>
-
-    //<editor-fold defaultstate="collapsed" desc="METODOS AUXILIARES">
-    
-    public static int stockLibro(String isbn) throws LibroNoExiste, LibroNoDisponible {
+     
+    //<editor-fold defaultstate="collapsed" desc="OTROS METODOS">
+     public static int stockLibro(String isbn) throws LibroNoExiste, LibroNoDisponible {
         int pos = buscaIsbn(isbn);
         if (pos == -1) {
             throw new LibroNoExiste("No existe en esta biblioteca la referencia: " + isbn);
@@ -799,6 +876,11 @@ public class Biblioteca2026 {
         prestamosHist.add(new Prestamo(libros.get(1), usuarios.get(1), hoy.minusDays(20), hoy.minusDays(5)));
         prestamosHist.add(new Prestamo(libros.get(7), usuarios.get(2), hoy.minusDays(15), hoy));
         prestamosHist.add(new Prestamo(libros.get(6), usuarios.get(3), hoy.minusDays(15), hoy));
-    }
-//</editor-fold>   
+    }   
+    
+    //</editor-fold>
+    
+    
+   
+        
 }
